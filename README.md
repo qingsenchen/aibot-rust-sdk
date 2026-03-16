@@ -33,98 +33,7 @@ aibot-rust-sdk = { git = "YOUR_GIT_REPO_URL" }
 
 ## 快速开始
 
-示例见 `examples/quick_start.rs`：
-
-```rust
-use aibot_rust_sdk::{
-  generate_req_id,
-  DefaultLogger,
-  WSClient,
-  WSClientOptions,
-  WsFrame,
-  WsFrameHeaders,
-  WelcomeReplyBody,
-  WelcomeTextContent,
-  WelcomeTextReplyBody,
-};
-use std::sync::Arc;
-
-#[tokio::main]
-async fn main() {
-  // 1. 创建客户端实例
-  let ws_client = WSClient::new(WSClientOptions {
-    bot_id: "your-bot-id".to_string(),
-    secret: "your-bot-secret".to_string(),
-    reconnect_interval: None,
-    max_reconnect_attempts: None,
-    heartbeat_interval: None,
-    request_timeout: None,
-    ws_url: None,
-    logger: Some(Arc::new(DefaultLogger::default())),
-  });
-
-  // 2. 建立连接
-  ws_client.connect();
-
-  // 3. 监听认证成功
-  ws_client.on_authenticated(|| {
-    println!("🔐 认证成功");
-  });
-
-  // 4. 监听文本消息并进行流式回复
-  {
-    let client = ws_client.clone();
-    ws_client.on_message_text(move |frame: WsFrame<aibot_rust_sdk::TextMessage>| {
-      if let Some(body) = frame.body.clone() {
-        let content = body.text.content;
-        println!("收到文本: {}", content);
-
-        let stream_id = generate_req_id("stream");
-        let headers: WsFrameHeaders = (&frame).into();
-
-        let client_clone = client.clone();
-        tokio::spawn(async move {
-          let _ = client_clone
-            .reply_stream(&headers, &stream_id, "正在思考中...", false, None, None)
-            .await;
-
-          tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-          let _ = client_clone
-            .reply_stream(
-              &headers,
-              &stream_id,
-              &format!("你好！你说的是: \"{}\"", content),
-              true,
-              None,
-              None,
-            )
-            .await;
-        });
-      }
-    });
-  }
-
-  // 5. 监听进入会话事件（发送欢迎语）
-  {
-    let client = ws_client.clone();
-    ws_client.on_event_enter_chat(move |frame: WsFrame<aibot_rust_sdk::EventMessage>| {
-      let headers: WsFrameHeaders = (&frame).into();
-      let client_clone = client.clone();
-      tokio::spawn(async move {
-        let body = WelcomeReplyBody::Text(WelcomeTextReplyBody {
-          msgtype: "text".to_string(),
-          text: WelcomeTextContent { content: "您好！我是智能助手，有什么可以帮您的吗？".to_string() },
-        });
-        let _ = client_clone.reply_welcome(&headers, body).await;
-      });
-    });
-  }
-
-  // 6. 优雅退出
-  tokio::signal::ctrl_c().await.ok();
-  ws_client.disconnect();
-}
-```
+示例见 `examples/basic.rs`。
 
 ## API 文档
 
@@ -286,8 +195,7 @@ aibot-rust-sdk/
 │       ├── api.rs            # API/WebSocket 帧/模板卡片类型
 │       └── common.rs         # 通用类型（Logger）
 ├── examples/
-│   ├── basic.rs             # 完整示例
-│   └── quick_start.rs       # 快速开始示例
+│   └── basic.rs             # 完整示例
 ├── Cargo.toml
 └── Cargo.lock
 ```

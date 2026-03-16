@@ -22,8 +22,8 @@ use url::Url;
 async fn main() {
   // 创建 WSClient 实例
   let ws_client = WSClient::new(WSClientOptions {
-    bot_id: "aibMr-WbKuAmAvutcWLwfkieQufgKthIVgU".to_string(),
-    secret: "6ULs6aQuetVt976AApYcaCbNbJ04gQ2DNNvzR2m4NKn".to_string(),
+    bot_id: "your_bot_id".to_string(),
+    secret: "your_bot_secret".to_string(),
     reconnect_interval: None,
     max_reconnect_attempts: None,
     heartbeat_interval: None,
